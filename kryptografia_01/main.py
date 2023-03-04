@@ -13,7 +13,7 @@ class Cipher:
         self.plaintext = plaintext
 
     @staticmethod
-    def ciphert_caesar(operation) -> chr:
+    def ciphert_caesar(operation: str) -> chr:
         if operation == 'encrypt':
             return lambda character, shift: Cipher.alphabet.get((ord(character)-97 + shift) % 26)
         elif operation == 'decrypt':
@@ -79,12 +79,14 @@ def read_file(l_file_name: str) -> list:
         return file.readlines()
 
 
-def choose_option(option_list, message: str):
+def choose_option(option_list: (tuple, list, dict), message: str, cond=None):
     if isinstance(option_list, (tuple, list)):
         while True:
             try:
                 option_enum = input(message+'\n')
-                if option_enum not in option_list:
+                if option_enum == cond:
+                    return cond
+                elif option_enum not in option_list:
                     raise Warning(f'No such option in the given list')
                 else:
                     return option_enum
@@ -94,7 +96,9 @@ def choose_option(option_list, message: str):
         while True:
             try:
                 option_enum = input(message+'\n')
-                if option_enum not in option_list.keys():
+                if option_enum == cond:
+                    return cond
+                elif option_enum not in option_list.keys():
                     raise Warning(f'No such option in the given list')
                 else:
                     return option_list.get(option_enum)
@@ -103,11 +107,11 @@ def choose_option(option_list, message: str):
 
 
 def get_input():  # Handles getting input from the user (file to be encrypted, decrypted and cipher type)
-    return_list = {'run_mode': choose_option(['1', '2', '3'], 'What do you want to do\n'
-                        '1 - Encrypt a file\n2 - Decrypt a file\n3 - Demonstrate encryption and decryption')}
-    return_list['file_name'] = choose_file('containing the plaintext(press enter to use demo file) or input "?" to end', '?')
-    if return_list.get('file_name')[0] == '?':
+    return_list = {'run_mode': choose_option(['1', '2', '3'], 'What do you want to do(input "?" to end)\n'
+                        '1 - Encrypt a file\n2 - Decrypt a file\n3 - Demonstrate encryption and decryption', '?')}
+    if return_list.get('run_mode') == '?':
         return return_list
+    return_list['file_name'] = choose_file('containing the plaintext(press enter to use demo file)')
     plaintext = ''.join(read_file(return_list['file_name']))
     return_list['to_encrypt'] = Cipher(plaintext)
     return_list['cipher_type'] = choose_option(Cipher.available_ciphers, f'Choose the cipher'
@@ -132,7 +136,7 @@ def get_input():  # Handles getting input from the user (file to be encrypted, d
 if __name__ == '__main__':
     while True:
         user_input = get_input()
-        if user_input.get('file_name')[0] == '?':  # Stop program on '?' input
+        if user_input.get('run_mode') == '?':  # Stop program on '?' input
             break
         cipher_parameters = [i for i in tuple(user_input.values())[4:]]  # Create a list of parameters for the given cipher
         if user_input['run_mode'] == '1':
