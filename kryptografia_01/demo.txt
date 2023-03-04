@@ -1,2 +1,29 @@
 ąćęóżźłA133B  +!@+#_!@$11 AAAAEK
 abcdefghijklmnopqrstuvwxyz
+
+Zaimplementować algorytm kryptograficzny z wybranym szyfrem monoalfabetycznym.
+
+Po rozwiązaniu zadania plik(i) z kodem, wejścia/wyjścia oraz sprawozdanie należy zamieścić na eNauczaniu.
+
+
+WYMAGANIA PODSTAWOWE:
+
+usuwa znaki białe i interpunkcyjne,
+zamienia litery na małe / na wielkie,
+usuwa z liter symbole diakrytyczne (zamiana ą na a itd.),
+usuwa cyfry,
+formatu tekst w 7 kolumn po 5 znaków oddzielonych spacjami,
+tekst wczytuje z/do plików wskazanych przez użytkownika (w pliku demo lub pobiera z konsoli).
+Oraz:
+
+otwiera wskazany przez użytkownika plik,
+szyfruje tekst (wielkie litery) wybranym algorytmem i zapisuje do pliku,
+lub deszyfruje (małe litery) i zapisuje do pliku.
+
+Input: plik txt x2, Output: plik txt, Screen: ???
+
+WYMAGANIA DODATKOWE
+
+kontrola błędów,
+ulepszenie usuwania znaków diakrytycznych (inne języki),
+zaimplementowanie więcej wybranych szyfrów monoalfabetycznych.
