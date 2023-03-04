@@ -110,7 +110,7 @@ def get_input():  # Handles getting input from the user (file to be encrypted, d
         return return_list
     plaintext = ''.join(read_file(return_list['file_name']))
     return_list['to_encrypt'] = Cipher(plaintext)
-    return_list['cipher_type'] = choose_option(Cipher.available_ciphers, f'Choose the cipher to be used to encrypt the chosen file '
+    return_list['cipher_type'] = choose_option(Cipher.available_ciphers, f'Choose the cipher'
                                     f'(Input a number corresponding to the cipher).'
                                     f'\nAvailable ciphers:\n1 - Atbash\n2 - ROT13\n3 - Caesar\'s\n4 - Gaderypoluki')
     if return_list['cipher_type'] == 'Caesar\'s':
