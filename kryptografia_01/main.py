@@ -9,12 +9,12 @@ class Cipher:
         self.plaintext = plaintext
         self.alphabet = alphabet
 
-    def encrypt(self, l_cipher_type: str, extra_args, *args) -> str:  # Encrypts the text with given function(cipher)
-        encryption_procedure = ciphers.cipher_list().get(l_cipher_type)('encrypt', *extra_args)
+    def encrypt(self, l_cipher_type: str, cipher_func_extra_args, *args) -> str:  # Encrypts the text with given function(cipher)
+        encryption_procedure = ciphers.cipher_list().get(l_cipher_type)('encrypt', *cipher_func_extra_args)
         return ''.join([encryption_procedure(character, *args) for character in self.prepare_text()]).upper()
 
-    def decrypt(self, l_cipher_type: str, extra_args, *args) -> str:  # Decrypts the text with given function(cipher)
-        decryption_procedure = ciphers.cipher_list().get(l_cipher_type)('decrypt', *extra_args)
+    def decrypt(self, l_cipher_type: str, cipher_func_extra_args, *args) -> str:  # Decrypts the text with given function(cipher)
+        decryption_procedure = ciphers.cipher_list().get(l_cipher_type)('decrypt', *cipher_func_extra_args)
         return ''.join([decryption_procedure(character, *args) for character in self.prepare_text()]).lower()
 
     def prepare_text(self) -> list:  # Prepares the text for encrypting/decrypting
