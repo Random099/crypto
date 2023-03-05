@@ -18,7 +18,8 @@ class Cipher:
         return ''.join([decryption_procedure(character, *args) for character in self.prepare_text()]).lower()
 
     def prepare_text(self) -> str:  # Prepares the text for encrypting/decrypting
-        return ''.join([char for char in unidecode(self.plaintext).lower() if char in list(self.alphabet.values())])
+        no_diacritics_lower = unidecode(self.plaintext).lower()
+        return ''.join([char for char in no_diacritics_lower if char in list(self.alphabet.values())])
 
 def format_text(text: str, func):  # Formats the text into 5-letter words and 7 columns
     split_array = [text[i:i + 5] for i in range(0, len(text), 5)]
