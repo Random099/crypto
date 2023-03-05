@@ -5,9 +5,9 @@ import ciphers
 
 
 class Cipher:
-    def __init__(self, plaintext: str, alphabet: dict):
-        self.plaintext = plaintext
-        self.alphabet = alphabet
+    def __init__(self, _plaintext: str, _alphabet: dict):
+        self.plaintext = _plaintext
+        self.alphabet = _alphabet
 
     def encrypt(self, l_cipher_type: str, cipher_func_extra_args, *args) -> str:  # Encrypts the text with given function(cipher)
         encryption_procedure = ciphers.cipher_list().get(l_cipher_type)('encrypt', *cipher_func_extra_args)
@@ -17,8 +17,8 @@ class Cipher:
         decryption_procedure = ciphers.cipher_list().get(l_cipher_type)('decrypt', *cipher_func_extra_args)
         return ''.join([decryption_procedure(character, *args) for character in self.prepare_text()]).lower()
 
-    def prepare_text(self) -> list:  # Prepares the text for encrypting/decrypting
-        return [letter for letter in unidecode(self.plaintext).lower() if letter in list(self.alphabet.values())]
+    def prepare_text(self) -> str:  # Prepares the text for encrypting/decrypting
+        return ''.join([char for char in unidecode(self.plaintext).lower() if char in list(self.alphabet.values())])
 
 def format_text(text: str, func):  # Formats the text into 5-letter words and 7 columns
     split_array = [text[i:i + 5] for i in range(0, len(text), 5)]
