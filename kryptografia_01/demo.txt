@@ -1,4 +1,4 @@
-ąćęóżźłA133B  +!@+#_!@$11 AAAAEK
+ěďčąćęóżźłA133B  +!@+#_!@$11 AAAAEK
 abcdefghijklmnopqrstuvwxyz
 
 Zaimplementować algorytm kryptograficzny z wybranym szyfrem monoalfabetycznym.
