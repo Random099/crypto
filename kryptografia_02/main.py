@@ -32,7 +32,7 @@ def get_freq_dict(l_text: (str, list)) -> dict[chr, float]:
     l_letters = [line[0].upper() for line in l_text[1:]]
     l_percentages = [float(line[2:-1]) for line in l_text[1:]]
     l_freq_dict = dict(zip(l_letters, l_percentages))
-    for letter, percentage in l_freq_dict.items():  # Remove diacritics and sum percentages
+    for letter, percentage in list(l_freq_dict.items())[26:]:  # Remove diacritics and sum percentages
         ascii_letter = unidecode(letter).upper()
         if ascii_letter in list(l_freq_dict.keys())[:26]:
             l_freq_dict[ascii_letter] += l_freq_dict[letter]
@@ -49,15 +49,18 @@ def freq_decrypt(l_alphabet: (str, list), l_todecrypt_filename: str, l_freq_file
     l_replace_map = {}
     for l_char, l_char_freq in l_language_freq.items():
         for l_char_toreplace, l_count_freq in l_todecrypt_freq.items():
-            if abs(l_char_freq - l_count_freq[1]) < 0.25:
-                l_replace_map[l_char_toreplace] = l_char
-    l_text = ''.join([l_replace_map[char] if char in list(l_replace_map.keys()) else char for char in l_text])
+            if round(abs(l_char_freq - l_count_freq[1]), 3) < 0.7:
+                if l_char_toreplace not in list(l_replace_map.keys()) and l_char not in list(l_replace_map.values()):
+                    l_replace_map[l_char_toreplace] = (l_char, round(abs(l_char_freq - l_count_freq[1]), 3))
+                elif round(abs(l_char_freq - l_count_freq[1]), 3) < l_replace_map[l_char_toreplace][1] and l_char not in list(l_replace_map.values()):
+                    l_replace_map[l_char_toreplace] = (l_char, round(abs(l_char_freq - l_count_freq[1]), 3))
+    l_text = ''.join([l_replace_map[char][0] if char in list(l_replace_map.keys()) else char for char in l_text])
     write_file('replaced.txt', l_text)
     print(l_replace_map)
 
 
 if __name__ == '__main__':
     alphabet = [char.upper() for char in [*string.ascii_lowercase]]
-    file_list = ['tekst1.txt', 'tekst2.txt']
-    analyse_files(alphabet, file_list)
+    #file_list = ['tekst1.txt', 'tekst2.txt']
+    #analyse_files(alphabet, file_list)
     freq_decrypt(alphabet, 'tekst2.txt', 'english_letter_frequency.txt')
