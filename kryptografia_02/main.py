@@ -48,23 +48,34 @@ def get_freq_dict(l_text: (str, list)) -> dict[chr, float]:
     return l_freq_dict
 
 
+def get_pair(dict_1: dict, dict_2: dict):
+    curr_min = float('inf')
+    pair = []
+    for key_1, value_1 in dict_1.items():
+        for key_2, value_2 in dict_2.items():
+            if abs(value_1 - value_2) < curr_min:
+                curr_min = abs(value_1 - value_2)
+                pair = [key_2, key_1]
+    return pair
+
+
 def freq_decrypt(l_alphabet: (str, list), l_todecrypt_filename: str, l_freq_filename: str) -> None:
     l_text = read_file(l_todecrypt_filename)[0]
     l_letters_freq = read_file(l_freq_filename)
-    l_todecrypt_freq = letter_frequency_analysis(l_alphabet, l_text)
+    l_todecrypt_freq = {letter: frequency[1] for letter, frequency in letter_frequency_analysis(l_alphabet, l_text).items()}
+    l_todecrypt_freq = dict(sorted(l_todecrypt_freq.items(), key=lambda item: item[1]))
     l_language_freq = get_freq_dict(l_letters_freq)
-    l_replace_map = {}
-    for l_char, l_char_freq in l_language_freq.items():
-        for l_char_toreplace, l_count_freq in l_todecrypt_freq.items():
-            if round(abs(l_char_freq - l_count_freq[1]), 3) < 0.7:
-                if l_char_toreplace not in list(l_replace_map.keys()):
-                    l_replace_map[l_char_toreplace] = (l_char, round(abs(l_char_freq - l_count_freq[1]), 3))
-                elif round(abs(l_char_freq - l_count_freq[1]), 3) < l_replace_map[l_char_toreplace][1]:
-                    l_replace_map[dict_key_from_value(l_replace_map, l_replace_map[l_char_toreplace])] = (dict_key_from_value(l_replace_map, l_replace_map[l_char_toreplace]), 100)
-                    l_replace_map[l_char_toreplace] = (l_char, round(abs(l_char_freq - l_count_freq[1]), 3))
-    l_text = ''.join([l_replace_map[char][0] if char in list(l_replace_map.keys()) else char for char in l_text])
+    l_language_freq = dict(sorted(l_language_freq.items(), key=lambda item: item[1]))
+    replace_pairs = {}
+
+    for letter in range(len(l_alphabet)):
+        pair = get_pair(l_language_freq, l_todecrypt_freq)
+        replace_pairs[pair[0]] = pair[1]
+        del l_language_freq[pair[1]]
+        del l_todecrypt_freq[pair[0]]
+    print(replace_pairs)
+    l_text = ''.join([replace_pairs[char] if char in list(replace_pairs.keys()) else char for char in l_text])
     write_file('replaced.txt', l_text)
-    print(l_replace_map)
 
 
 if __name__ == '__main__':
