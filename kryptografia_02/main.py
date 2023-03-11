@@ -159,8 +159,42 @@ def ngram_list_decrypt(ngram_list: list, key: dict):
     return temp_ngram_list
 
 
+def words_in_text(word_list: list, text: str, word_count: int, unique_words: set) -> bool:
+    for word in word_list:
+        if word in text:
+            unique_words.add(word)
+        if len(unique_words) == word_count:
+            return True
+    return False
+
+
+def get_to_keep(letter_map: dict, words: set, exclude: dict) -> dict:
+    new_map = dict()
+    for word in words:
+        for letter in word:
+            if letter in letter_map.keys() and letter not in exclude.keys():
+                new_map[letter] = letter_map[letter]
+    return new_map | exclude
+
+
+def format_text(text: str, func):  # Formats the text into 5-letter words and 7 columns
+    for word in text:
+        func(word+'\n')
+
+
+def write_file_2(l_file_name: str, text: str):
+    with open(l_file_name, 'w') as file:
+        format_text(text, file.write)
+    return l_file_name
+
 if __name__ == '__main__':
     ALPHABET = [char.upper() for char in [*string.ascii_lowercase]]
+    LANGUAGE = 'english'
+    SAMPLE_WORDS = [unidecode(word.strip()).upper() for word in read_file(f'{LANGUAGE}_sample_words.txt')]
+    SAMPLE_WORDS += [unidecode(word.strip()).upper() for word in read_file(f'english_sample_words.txt')]
+    SAMPLE_WORDS += [word.upper()[:-2] for word in read_file(f'polish_sample_words_2.txt') if word not in SAMPLE_WORDS]
+    SAMPLE_WORDS += [word for word in read_file(f'english_cleared.txt') if word not in SAMPLE_WORDS]
+    SAMPLE_WORDS = [word for word in SAMPLE_WORDS if len(word) > 3]
     ENCRYPTED_TEXT_FILE = 'tekst2.txt'
     ENCRYPTED_TEXT = read_file(ENCRYPTED_TEXT_FILE)[0]
     bigram_freq = get_ngram_freq(ENCRYPTED_TEXT, 2)
@@ -168,18 +202,51 @@ if __name__ == '__main__':
     #quadrigram_freq = get_ngram_freq(ENCRYPTED_TEXT, 4)
     top_10_bigrams = list(bigram_freq.items())[-10:]  # Top 10 highest frequency bigrams
     top_10_bigrams = [x[0] for x in top_10_bigrams]
+    print(top_10_bigrams)
     top_10_trigrams = list(trigram_freq.items())[-10:]  # Top 10 highest frequency trigrams
     top_10_trigrams = [x[0] for x in top_10_trigrams]
-    FREQ_ATTEMPTED_KEY, PAIR_DIFF, FREQ_DECRYPT_TEXT = freq_decrypt(ALPHABET, ENCRYPTED_TEXT, 'polish_letter_frequency.txt')
-    CURRENT_KEY = FREQ_ATTEMPTED_KEY
-    DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT, FREQ_ATTEMPTED_KEY)
+    print(top_10_trigrams)
+    #FREQ_ATTEMPTED_KEY, PAIR_DIFF, FREQ_DECRYPT_TEXT = freq_decrypt(ALPHABET, ENCRYPTED_TEXT, f'{LANGUAGE}_letter_frequency.txt')
+    #TO_KEEP = {'M': 'N', 'D': 'I', 'A': 'E', 'O': 'W', 'W': 'O', 'N': 'L', 'C': 'A'}
+    TO_KEEP = dict()
+    COUNTER = 0
+    START_TARGET_WORD_COUNT = 20
+    TARGET_WORD_COUNT = START_TARGET_WORD_COUNT
+    while True:
+        COUNTER += 1
+        UNIQUE_WORDS = set()
+        if COUNTER > 50:
+            TARGET_WORD_COUNT = START_TARGET_WORD_COUNT
+            print(TARGET_WORD_COUNT)
+            print(f'KEY RESET')
+            CURRENT_KEY = gen_random_key(ALPHABET)
+            COUNTER = 0
+        CURRENT_KEY = update_key(gen_random_key(ALPHABET), TO_KEEP)
+        DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT[:10000], CURRENT_KEY)
+        if words_in_text(SAMPLE_WORDS, DECRYPTED_TEXT, TARGET_WORD_COUNT, UNIQUE_WORDS):
+            TARGET_WORD_COUNT += 1
+            TO_KEEP = get_to_keep(CURRENT_KEY, UNIQUE_WORDS, TO_KEEP)
+            print(TO_KEEP)
+            DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT, CURRENT_KEY)
+            print(f'Text sample: {DECRYPTED_TEXT[0:200]}')
+            #break
+        if len(TO_KEEP) == len(ALPHABET)-2:
+            print(f'DONE')
+            print(UNIQUE_WORDS)
+            break
     write_file('attempted_decrypt.txt', DECRYPTED_TEXT)
     while True:
+        to_exit = input(f'Input "EXIT" to get the final key:\n')
+        if to_exit == 'EXIT':
+            print(f'FINAL KEY: {CURRENT_KEY}')
+            break
+        else:
+            pass
         print(f'Text sample: {DECRYPTED_TEXT[0:200]}')
         print(CURRENT_KEY)
-        print(top_10_bigrams)
+        print(f'Top 10 ogbigrams: {top_10_bigrams}')
         print(f'Top 10 bigrams: {ngram_list_decrypt(top_10_bigrams, CURRENT_KEY)}')
-        print(top_10_trigrams)
+        print(f'Top 10 ogtrigrams: {top_10_trigrams}')
         print(f'Top 10 bigrams: {ngram_list_decrypt(top_10_trigrams, CURRENT_KEY)}')
         print(f'Letter: {list(CURRENT_KEY.keys())}')
         print(f'Swapto: {list(CURRENT_KEY.values())}')
