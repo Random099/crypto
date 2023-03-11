@@ -1,7 +1,8 @@
 from unidecode import unidecode
 import string
-import os
+import copy
 import random
+
 
 def dict_key_from_value(l_dict: dict, target_value):
     keys = [key for key, value in l_dict.items() if value == target_value]
@@ -59,7 +60,7 @@ def get_pair(dict_1: dict, dict_2: dict) -> list:
     return pair
 
 
-def freq_decrypt(l_alphabet: (str, list), l_todecrypt: str, l_freq_filename: str) -> (dict, list):
+def freq_decrypt(l_alphabet: (str, list), l_todecrypt: str, l_freq_filename: str) -> (dict, list, str):
     l_letters_freq = read_file(l_freq_filename)
     l_todecrypt_freq = {letter: frequency[1] for letter, frequency in letter_frequency_analysis(l_alphabet, l_todecrypt).items()}
     l_todecrypt_freq = dict(sorted(l_todecrypt_freq.items(), key=lambda item: item[1]))
@@ -75,8 +76,8 @@ def freq_decrypt(l_alphabet: (str, list), l_todecrypt: str, l_freq_filename: str
         del l_language_freq[pair[1]]
         del l_todecrypt_freq[pair[0]]
     l_text = ''.join([replace_pairs[char] if char in list(replace_pairs.keys()) else char for char in l_todecrypt])
-    write_file('replaced.txt', l_text)
-    return replace_pairs, pair_diff
+    return replace_pairs, pair_diff, l_text
+
 
 def get_ngram_freq(text: str, n: int) -> dict:
     ngram_set = set()
@@ -132,54 +133,60 @@ def update_key(old_key: dict, to_keep: dict) -> dict[str, str]:
     return to_keep | shuffled
 
 
-def get_keep_list(elements: list) -> list:
+def get_keep_list(elements: dict) -> dict:
     while True:
         try:
             to_keep = [*input('Elements to keep:')]
-            if to_keep not in elements:
-                raise Warning('Not in given list')
-            return to_keep
+            print(to_keep)
+            for element in to_keep:
+                if element == '?':
+                    break
+                if element not in list(elements.keys()):
+                    raise Warning('Not in given list')
+            return {key: value for key, value in elements.items() if key in to_keep}
         except Warning as err:
             print(str(err))
 
 
+def attempt_decrypt(text: str, key: dict) -> str:
+    return ''.join([key[char] if char in key.keys() else char for char in text])
+
+
+def ngram_list_decrypt(ngram_list: list, key: dict):
+    temp_ngram_list = copy.deepcopy(ngram_list)
+    for i in range(len(temp_ngram_list)):
+        temp_ngram_list[i] = ''.join([key[char] for char in temp_ngram_list[i]])
+    return temp_ngram_list
+
+
 if __name__ == '__main__':
-    alphabet = [char.upper() for char in [*string.ascii_lowercase]]
-    print(gen_random_key(alphabet))
-    encrypted_text = read_file('tekst2.txt')[0]
-    bigram_freq = get_ngram_freq(encrypted_text, 2)
-    trigram_freq = get_ngram_freq(encrypted_text, 3)
-    quadrigram_freq = get_ngram_freq(encrypted_text, 4)
+    ALPHABET = [char.upper() for char in [*string.ascii_lowercase]]
+    ENCRYPTED_TEXT_FILE = 'tekst2.txt'
+    ENCRYPTED_TEXT = read_file(ENCRYPTED_TEXT_FILE)[0]
+    bigram_freq = get_ngram_freq(ENCRYPTED_TEXT, 2)
+    trigram_freq = get_ngram_freq(ENCRYPTED_TEXT, 3)
+    #quadrigram_freq = get_ngram_freq(ENCRYPTED_TEXT, 4)
     top_10_bigrams = list(bigram_freq.items())[-10:]  # Top 10 highest frequency bigrams
     top_10_bigrams = [x[0] for x in top_10_bigrams]
-    top_10_trigrams = list(trigram_freq.items())[-10:]
-    top_10_trigrams = [x[0] for x in top_10_trigrams]  # Top 10 highest frequency trigrams
-    #print(list(quadrigram_freq.items())[-10:])  # Print 10 highest frequency quadrigrams
-    #attempted_key, pair_diff = freq_decrypt(alphabet, encrypted_text, 'polish_letter_frequency.txt')
-    attempted_key = gen_random_key(alphabet)
-    TEXT = read_file('replaced.txt')[0]
-    print(TEXT[0:30])
-    print(top_10_bigrams)
-    print(top_10_trigrams)
-    print(attempted_key)
+    top_10_trigrams = list(trigram_freq.items())[-10:]  # Top 10 highest frequency trigrams
+    top_10_trigrams = [x[0] for x in top_10_trigrams]
+    FREQ_ATTEMPTED_KEY, PAIR_DIFF, FREQ_DECRYPT_TEXT = freq_decrypt(ALPHABET, ENCRYPTED_TEXT, 'polish_letter_frequency.txt')
+    CURRENT_KEY = FREQ_ATTEMPTED_KEY
+    DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT, FREQ_ATTEMPTED_KEY)
+    write_file('attempted_decrypt.txt', DECRYPTED_TEXT)
     while True:
+        print(f'Text sample: {DECRYPTED_TEXT[0:200]}')
+        print(CURRENT_KEY)
+        print(top_10_bigrams)
+        print(f'Top 10 bigrams: {ngram_list_decrypt(top_10_bigrams, CURRENT_KEY)}')
+        print(top_10_trigrams)
+        print(f'Top 10 bigrams: {ngram_list_decrypt(top_10_trigrams, CURRENT_KEY)}')
+        print(f'Letter: {list(CURRENT_KEY.keys())}')
+        print(f'Swapto: {list(CURRENT_KEY.values())}')
+        SWAP_MAP = swap_letters(ALPHABET)
+        CURRENT_KEY = merge_entries(CURRENT_KEY, SWAP_MAP)
+        KEPT_KEYS = get_keep_list(CURRENT_KEY)
+        CURRENT_KEY = update_key(CURRENT_KEY, KEPT_KEYS)
+        DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT, CURRENT_KEY)
+        write_file('attempted_decrypt.txt', DECRYPTED_TEXT)
 
-
-    # while True:
-    #     curr_top_10_bigrams = top_10_bigrams[:]
-    #     print(curr_top_10_bigrams)
-    #     curr_top_10_trigrams = top_10_trigrams[:]
-    #     SWAP_MAP = swap_letters(alphabet)
-    #     attempted_key = merge_entries(attempted_key, SWAP_MAP)
-    #     for i in range(len(top_10_bigrams)):
-    #         curr_top_10_bigrams[i] = ''.join([attempted_key[char] for char in top_10_bigrams[i]])
-    #     for i in range(len(top_10_trigrams)):
-    #         curr_top_10_trigrams[i] = ''.join([attempted_key[char] for char in top_10_trigrams[i]])
-    #     TEXT = ''.join([attempted_key[char] for char in TEXT])
-    #     write_file('after_swap.txt', TEXT)
-    #     TEXT = read_file('replaced.txt')[0]
-    #     print(TEXT[0:30])
-    #     print(curr_top_10_bigrams)
-    #     print(curr_top_10_trigrams)
-    #     print(attempted_key)
-    #pair_chances = dict(zip([round(x, 4) for x in pair_diff], list(attempted_key.items())))
