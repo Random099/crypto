@@ -1,7 +1,7 @@
 from unidecode import unidecode
 import string
 import os
-
+import random
 
 def dict_key_from_value(l_dict: dict, target_value):
     keys = [key for key, value in l_dict.items() if value == target_value]
@@ -91,37 +91,95 @@ def get_ngram_freq(text: str, n: int) -> dict:
     return dict(sorted(ngram_freq.items(), key=lambda item: item[1]))
 
 
-def swap_letters(alphabet: (str, list), file_name: str) -> dict[str, str]:
-    text = read_file(file_name)
+def swap_letters(alphabet: (str, list)) -> dict[str, str]:
     swap_map = dict()
     while True:
         try:
             original_letter = input('Letter to swap:\n')
-            swapto_letter = input('Letter after swap:\n')
-            if original_letter or swapto_letter == '?':
+            if original_letter == '?':
                 break
-            elif original_letter or swapto_letter not in alphabet:
+            swapto_letter = input('Letter after swap:\n')
+            if swapto_letter == '?':
+                break
+            if original_letter not in alphabet or swapto_letter not in alphabet:
                 raise Warning('Not a valid character')
             swap_map[original_letter] = swapto_letter
         except Warning as err:
             print(str(err))
-    text = ''.join([swap_map[char] if char in list(swap_map.keys()) else char for char in text])
-    write_file('after_swap.txt', text)
     return swap_map
+
+
+def gen_random_key(alphabet: (str, list)) -> dict[str, str]:
+    alphabet_to = alphabet[:]
+    random.shuffle(alphabet_to)
+    return dict(zip(alphabet, alphabet_to))
+
+
+def merge_entries(to_change: dict, source: dict) -> dict:
+    for key, value in source.items():
+        at_value = dict_key_from_value(to_change, value)
+        temp = to_change[key]
+        to_change[key] = source[key]
+        to_change[at_value] = temp
+    return to_change
+
+
+def update_key(old_key: dict, to_keep: dict) -> dict[str, str]:
+    to_shuffle = {key: value for key, value in old_key.items() if key not in to_keep.keys()}
+    to_shuffle_values = list(to_shuffle.values())
+    random.shuffle(list(to_shuffle_values))
+    shuffled = dict(zip(list(to_shuffle.keys()), to_shuffle_values))
+    return to_keep | shuffled
+
+
+def get_keep_list(elements: list) -> list:
+    while True:
+        try:
+            to_keep = [*input('Elements to keep:')]
+            if to_keep not in elements:
+                raise Warning('Not in given list')
+            return to_keep
+        except Warning as err:
+            print(str(err))
 
 
 if __name__ == '__main__':
     alphabet = [char.upper() for char in [*string.ascii_lowercase]]
+    print(gen_random_key(alphabet))
     encrypted_text = read_file('tekst2.txt')[0]
     bigram_freq = get_ngram_freq(encrypted_text, 2)
     trigram_freq = get_ngram_freq(encrypted_text, 3)
     quadrigram_freq = get_ngram_freq(encrypted_text, 4)
-    #print(list(bigram_freq.items())[-10:]) # Print 10 highest frequency bigrams
-    #print(list(trigram_freq.items())[-10:]) # Print 10 highest frequency trigrams
+    top_10_bigrams = list(bigram_freq.items())[-10:]  # Top 10 highest frequency bigrams
+    top_10_bigrams = [x[0] for x in top_10_bigrams]
+    top_10_trigrams = list(trigram_freq.items())[-10:]
+    top_10_trigrams = [x[0] for x in top_10_trigrams]  # Top 10 highest frequency trigrams
     #print(list(quadrigram_freq.items())[-10:])  # Print 10 highest frequency quadrigrams
-    attempted_key, pair_diff = freq_decrypt(alphabet, encrypted_text, 'english_letter_frequency.txt')
+    #attempted_key, pair_diff = freq_decrypt(alphabet, encrypted_text, 'polish_letter_frequency.txt')
+    attempted_key = gen_random_key(alphabet)
+    TEXT = read_file('replaced.txt')[0]
+    print(TEXT[0:30])
+    print(top_10_bigrams)
+    print(top_10_trigrams)
+    print(attempted_key)
     while True:
-        SWAP_MAP = swap_letters(alphabet, 'replaced.txt')
-        for letter in SWAP_MAP.keys():
-            attempted_key[letter] = SWAP_MAP[letter]
+
+
+    # while True:
+    #     curr_top_10_bigrams = top_10_bigrams[:]
+    #     print(curr_top_10_bigrams)
+    #     curr_top_10_trigrams = top_10_trigrams[:]
+    #     SWAP_MAP = swap_letters(alphabet)
+    #     attempted_key = merge_entries(attempted_key, SWAP_MAP)
+    #     for i in range(len(top_10_bigrams)):
+    #         curr_top_10_bigrams[i] = ''.join([attempted_key[char] for char in top_10_bigrams[i]])
+    #     for i in range(len(top_10_trigrams)):
+    #         curr_top_10_trigrams[i] = ''.join([attempted_key[char] for char in top_10_trigrams[i]])
+    #     TEXT = ''.join([attempted_key[char] for char in TEXT])
+    #     write_file('after_swap.txt', TEXT)
+    #     TEXT = read_file('replaced.txt')[0]
+    #     print(TEXT[0:30])
+    #     print(curr_top_10_bigrams)
+    #     print(curr_top_10_trigrams)
+    #     print(attempted_key)
     #pair_chances = dict(zip([round(x, 4) for x in pair_diff], list(attempted_key.items())))
