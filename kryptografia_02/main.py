@@ -187,9 +187,17 @@ def write_file_2(l_file_name: str, text: str):
         format_text(text, file.write)
     return l_file_name
 
+
+def decrypted_match_with_unique(text: str, unique_words: set) -> bool:
+    for word in unique_words:
+        if word not in text:
+            return False
+    return True
+
+
 if __name__ == '__main__':
     ALPHABET = [char.upper() for char in [*string.ascii_lowercase]]
-    LANGUAGE = 'english'
+    LANGUAGE = 'polish'
     SAMPLE_WORDS = [unidecode(word.strip()).upper() for word in read_file(f'{LANGUAGE}_sample_words.txt')]
     SAMPLE_WORDS += [unidecode(word.strip()).upper() for word in read_file(f'english_sample_words.txt')]
     SAMPLE_WORDS += [word.upper()[:-2] for word in read_file(f'polish_sample_words_2.txt') if word not in SAMPLE_WORDS]
@@ -209,31 +217,33 @@ if __name__ == '__main__':
     #FREQ_ATTEMPTED_KEY, PAIR_DIFF, FREQ_DECRYPT_TEXT = freq_decrypt(ALPHABET, ENCRYPTED_TEXT, f'{LANGUAGE}_letter_frequency.txt')
     #TO_KEEP = {'M': 'N', 'D': 'I', 'A': 'E', 'O': 'W', 'W': 'O', 'N': 'L', 'C': 'A'}
     TO_KEEP = dict()
+    UNIQUE_WORDS = set()
     COUNTER = 0
     START_TARGET_WORD_COUNT = 20
     TARGET_WORD_COUNT = START_TARGET_WORD_COUNT
     while True:
         COUNTER += 1
-        UNIQUE_WORDS = set()
-        if COUNTER > 50:
+        if COUNTER > 100:
             TARGET_WORD_COUNT = START_TARGET_WORD_COUNT
-            print(TARGET_WORD_COUNT)
+            UNIQUE_WORDS = set()
             print(f'KEY RESET')
             CURRENT_KEY = gen_random_key(ALPHABET)
+            TO_KEEP = dict()
             COUNTER = 0
         CURRENT_KEY = update_key(gen_random_key(ALPHABET), TO_KEEP)
-        DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT[:10000], CURRENT_KEY)
+        DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT, CURRENT_KEY)
         if words_in_text(SAMPLE_WORDS, DECRYPTED_TEXT, TARGET_WORD_COUNT, UNIQUE_WORDS):
             TARGET_WORD_COUNT += 1
             TO_KEEP = get_to_keep(CURRENT_KEY, UNIQUE_WORDS, TO_KEEP)
             print(TO_KEEP)
-            DECRYPTED_TEXT = attempt_decrypt(ENCRYPTED_TEXT, CURRENT_KEY)
             print(f'Text sample: {DECRYPTED_TEXT[0:200]}')
             #break
         if len(TO_KEEP) == len(ALPHABET)-2:
             print(f'DONE')
             print(UNIQUE_WORDS)
             break
+    if not decrypted_match_with_unique(DECRYPTED_TEXT, UNIQUE_WORDS):
+        print(f'SOMETHING WENT WRONG')
     write_file('attempted_decrypt.txt', DECRYPTED_TEXT)
     while True:
         to_exit = input(f'Input "EXIT" to get the final key:\n')
